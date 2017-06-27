@@ -24,7 +24,7 @@ class TaskManager(object):
 
     """
     def __init__(self, task_queue_list):
-        self.task_queue_list = []
+        self.task_queue_list = task_queue_list
         self.collection_dict = {}
         self.__current_task_queue = None
 
@@ -42,9 +42,8 @@ class TaskManager(object):
 
     def get_task(self):
         """获取任务, 返回对应任务及对应处理函数, """
-        if not self.__current_task_queue.is_empty: # 判断当前任务队列的数量是否为零
+        if self.__current_task_queue is None or self.__current_task_queue.is_empty: # 判断当前任务队列的数量是否为零
             self.__set_current_task_queue()
-
         return self.__current_task_queue.get()
 
     def set_task(self, url, collection_name, **other):
@@ -59,12 +58,13 @@ class TaskManager(object):
 
     def __set_current_task_queue(self):
         """设置当前任务队列"""
+        # print(self.task_queue_list)
         for task_queue in self.task_queue_list:
             # 判断是否为空队列
+            # print("任务是否为空", task_queue.is_empty)
             if not task_queue.is_empty:
                 self.__current_task_queue = task_queue
                 return
-
         raise WithOutEnoughTask("没有足够任务参数")
 
     def add_task_queue(self, task_queue):

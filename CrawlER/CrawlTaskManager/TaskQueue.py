@@ -26,14 +26,14 @@ class TaskQueue(object):
         qsize: 任务数量
         is_empty: 是否为空
     """
-    def __init__(self, collection_, func, err_collection=None, spacing_time=0, is_crawl_file=False):
+    def __init__(self, collection_, func, err_collection=None, spacing_time=0, timeout=20, is_crawl_file=False):
         self.mutex = threading.Lock()
         self.collection = collection_
         self.err_collection = err_collection
         self.func = func
-
+        self.timeout = timeout
         self.spacing_time = spacing_time
-        self.crawl_file = is_crawl_file
+        self.is_crawl_file = is_crawl_file
 
     def get(self):
         """获取任务"""
@@ -41,7 +41,7 @@ class TaskQueue(object):
         task_params = self.collection.find_one_and_delete({})
         self.mutex.release()
 
-        return RequestTask(self, **task_params)
+        return RequestTask(self, task_params)
 
     def put(self, url, **other):
         """

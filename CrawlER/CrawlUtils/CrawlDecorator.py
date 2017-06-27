@@ -4,11 +4,10 @@
 task_queue_list = []
 
 
-def config(spacing_time=0, is_crawl_file=False):
+def config(spacing_time=0, timeout=20, is_crawl_file=False):
     """
     用于爬虫设定的装饰器
     :param spacing_time: 爬虫间隔时间
-    :param is_record_error: 错误记录
     :param is_crawl_file: 爬取文件
     :return:
     """
@@ -18,6 +17,7 @@ def config(spacing_time=0, is_crawl_file=False):
             return {
                 "func": func,
                 "func_name": func.__name__,
+                "timeout": timeout,
                 "is_crawl_file": is_crawl_file,
                 "spacing_time": spacing_time
             }

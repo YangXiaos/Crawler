@@ -24,8 +24,8 @@ class RequestTask(object):
 
         self.func = task_queue.func
         self.spacing_time = task_queue.spacing_time
-        self.crawl_file = task_queue.is_crawl_file
-        self.record_error = task_queue.is_record_error
+        self.timeout = task_queue.timeout
+        self.is_crawl_file = task_queue.is_crawl_file
         self.params = params
 
     @property

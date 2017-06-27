@@ -18,6 +18,7 @@ class CrawlRecordManager(object):
     def __init__(self, db):
         self.system_collection = db["system"]
 
+    @property
     def is_start(self):
         """
         :return: 返回是否存在爬取记录的布尔值

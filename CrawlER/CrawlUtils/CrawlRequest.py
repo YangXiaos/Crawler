@@ -97,3 +97,12 @@ def crawl_file(session, url, timeout=20, **kwargs):
         raise StateCodeException("状态码错误{}".format(res.status_code))
 
     return res
+
+
+if __name__ == '__main__':
+    import requests
+
+    session = requests.Session()
+    res = session.get("http://wx3.sinaimg.cn/mw600/a905b8d7gy1fff6bu2knqj20c805x3za.jpg")
+    FileSoup
+
