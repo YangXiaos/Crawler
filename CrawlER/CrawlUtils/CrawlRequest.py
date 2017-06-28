@@ -99,6 +99,25 @@ def crawl_file(session, url, timeout=20, **kwargs):
     return res
 
 
+def json_request(session, url, timeout=20, **kwargs):
+    """
+    json 请求
+    :param session: 会话
+    :param url: 请求链接
+    :param timeout: 超时设置
+    :param kwargs: 其他请求参数
+    :return:
+    """
+    res = session.get(url, timeout=timeout, **kwargs)
+
+    # 状态码异常
+    if res.status_code != 200:
+        raise StateCodeException("状态码错误{}".format(res.status_code))
+
+    return res.json()
+
+
+
 if __name__ == '__main__':
     import requests
 
