@@ -104,5 +104,5 @@ if __name__ == '__main__':
 
     session = requests.Session()
     res = session.get("http://wx3.sinaimg.cn/mw600/a905b8d7gy1fff6bu2knqj20c805x3za.jpg")
-    FileSoup
+
 
