@@ -4,5 +4,4 @@
 3. 任务队列(TaskQueue)
 """
 from CrawlER.CrawlTaskManager.RequestTask import RequestTask
-from CrawlER.CrawlTaskManager.TaskManager import TaskManager
-from CrawlER.CrawlTaskManager.TaskQueue import TaskQueue
+from CrawlER.CrawlTaskManager.TaskQueue import TaskQueue, TaskQueueManager

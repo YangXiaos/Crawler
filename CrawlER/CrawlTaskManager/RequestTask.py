@@ -25,7 +25,7 @@ class RequestTask(object):
         self.func = task_queue.func
         self.spacing_time = task_queue.spacing_time
         self.timeout = task_queue.timeout
-        self.is_crawl_file = task_queue.is_crawl_file
+        self.type = task_queue.type
         self.params = params
 
     @property
@@ -36,9 +36,9 @@ class RequestTask(object):
     @property
     def request_params(self):
         """返回其他参数"""
-        other = copy.copy(self.params)
-        [other.pop(field_name) for field_name in ["_id", "url"]]
-        return other
+        params = copy.copy(self.params)
+        [params.pop(field_name) for field_name in ["_id", "url"]]
+        return params
 
     def record_error(self, error):
         """
@@ -54,6 +54,6 @@ if __name__ == '__main__':
         print("测试")
 
     task = RequestTask(test, **{"url": "www.ccav.com", "dir_": "base", "_id": 1})
-    print(task.url)
-    print(task.other)
+    print(task.request_url)
+    print(task.request_params)
     task.func()

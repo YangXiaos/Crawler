@@ -9,4 +9,4 @@ class CrawlerType(Enum):
     html = 2
     post = 3
     driver = 4
-
+    res = 5

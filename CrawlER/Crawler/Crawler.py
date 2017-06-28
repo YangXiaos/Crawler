@@ -5,11 +5,11 @@ import time
 import traceback
 import requests
 
-from CrawlER.CrawlUtils.CrawlRequest import crawl_file, crawl_html, parse_file, parse_html
+from CrawlER import CrawlerType
+from CrawlER.CrawlUtils.CrawlRequest import crawl_file, crawl_html, json_request, parse_file, parse_html
 from CrawlER.Exception import WithOutEnoughTask, CrawlException
 
-from CrawlER.CrawlTaskManager.TaskQueue import TaskQueue
-from CrawlER.CrawlTaskManager.TaskManager import TaskManager
+from CrawlER.CrawlTaskManager.TaskQueue import TaskQueue, TaskQueueManager
 from CrawlER.CrawlRecord.CrawlRecordManager import CrawlRecordManager
 
 
@@ -34,17 +34,19 @@ class CrawlerMeta(type):
 
         # 更新任务队列
         for func in task_queue_generate_list:
-            task_queue_kwargs = func(None)
-            func_name = task_queue_kwargs.get("func_name")
-            collection_ = db[func_name]
-            err_collection = db[func_name + "_error"]
+            task_queue_kwargs = func()
+            collection_name, err_collection_name = \
+                task_queue_kwargs["collection_name"], task_queue_kwargs["err_collection_name"]
+
+            collection_ = db[collection_name]
+            err_collection = db[err_collection_name]
             task_queue_list.append(
                 TaskQueue(collection_,
-                          task_queue_kwargs.get("func"),
                           err_collection,
+                          task_queue_kwargs.get("func"),
                           task_queue_kwargs.get("spacing_time"),
                           task_queue_kwargs.get("timeout"),
-                          task_queue_kwargs.get("is_crawl_file"))
+                          task_queue_kwargs.get("type"))
             )
 
         attrs.update({"task_queue_list": task_queue_list})
@@ -84,7 +86,7 @@ class Crawler(object, metaclass=CrawlerMeta):
 
     def __init__(self):
         self.crawl_record_manager= CrawlRecordManager(self.db)
-        self.task_manager = TaskManager(self.task_queue_list)
+        self.task_manager = TaskQueueManager(self.task_queue_list)
         self.headers = {"User-Agent": self.user_agent}
         self.session = requests.Session()
 
@@ -95,7 +97,8 @@ class Crawler(object, metaclass=CrawlerMeta):
     def __set_start_task_queue(self):
         """设置初始任务队列"""
         for _ in self.start_url:
-            self.task_manager.find_collection_by_name("start").put(_)
+            self.task_manager.find_task_queue_by_name("start").put(_)
+
         self.crawl_record_manager.set_start_flat()
 
     def set_task(self, url, callback, **params):
@@ -103,10 +106,10 @@ class Crawler(object, metaclass=CrawlerMeta):
         设置下个任务
         :param url: 请求链接
         :param callback: 回调函数名
-        :param params: e
+        :param params: 其他任务参数
         :return:
         """
-        self.task_manager.set_task(url, callback, **params)
+        self.task_manager.find_task_queue_by_name(callback).put(url, **params)
 
     def crawl(self, crawl_task):
         """
@@ -114,14 +117,21 @@ class Crawler(object, metaclass=CrawlerMeta):
         :param crawl_task: 爬虫任务
         :return:
         """
-        if not crawl_task.is_crawl_file:
-            res = crawl_html(self.session, crawl_task.request_url, crawl_task.timeout)
+        if crawl_task.type == CrawlerType.html:
+            res = crawl_html(self.session, crawl_task.request_url, crawl_task.timeout, headers=self.headers)
             soup = parse_html(res.content)
-        else:
-            res = crawl_file(self.session, crawl_task.request_url, crawl_task.timeout)
-            soup = parse_file(res.iter_content(chunk_size=1024), res)
+            crawl_task.func(self, res, soup, **crawl_task.request_params)
 
-        crawl_task.func(self, res, soup, **crawl_task.request_params)
+        elif crawl_task.type == CrawlerType.file:
+            res = crawl_file(self.session, crawl_task.request_url, crawl_task.timeout, headers=self.headers)
+            soup = parse_file(res.iter_content(chunk_size=1024), res)
+            crawl_task.func(self, res, soup, **crawl_task.request_params)
+
+        elif crawl_task.type == CrawlerType.json:
+            res = crawl_html(self.session, crawl_task.request_url, crawl_task.timeout, headers=self.headers)
+            json_data = res.json()
+            crawl_task.func(self, res, json_data, **crawl_task.request_params)
+
         time.sleep(crawl_task.spacing_time)
 
     def begin(self):
@@ -151,12 +161,11 @@ if __name__ == '__main__':
         db_name = "test2"
         start_url = ["http://python.usyiyi.cn/django/index.html"]
 
-        @config(spacing_time=0)
+        @config(spacing_time=0, collection_name="start_collection", err_collection_name="start_err_collection")
         def start(self, res, soup, **other):
-            """"""
             self.set_task("http://python.usyiyi.cn/django/index.html", callback="to")
 
-        @config(spacing_time=5)
+        @config(spacing_time=5, collection_name="get_collection")
         def to(self, res, soup, **params):
             print(res.url)
 
