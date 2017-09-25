@@ -1,0 +1,45 @@
+# @Time         : 17-5-9 下午5:08
+# @Author       : DioMryang
+# @File         : crawl_jandan.py
+# @Description  : 爬取煎蛋网图片的脚步
+import pymongo
+
+from CrawlER.CrawlUtils.CrawlDecorator import config
+from CrawlER.Crawler import Crawler
+from CrawlER import CrawlerType
+
+
+connection=pymongo.MongoClient('localhost',27017)
+db = connection.dio5
+collection = db.test
+
+class DongManCrawler(Crawler):
+    """
+    动漫之家爬虫
+    """
+    start_url = ["http://search.51job.com/list/000000,000000,0000,00,9,99,%25E5%2592%25A8%25E8%25AF%25A2,2,{}.html?lang=c&stype=1&postchannel=0000&workyear=99&cotype=99&degreefrom=99&jobterm=99&companysize=99&lonlat=0%2C0&radius=-1&ord_field=0&confirmdate=9&fromType=&dibiaoid=0&address=&line=&specialarea=00&from=&welfare=".format(_) for _ in range(1, 2001)]
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"
+    db_name = "dio5"
+
+    @config(spacing_time=1, timeout=20)
+    def start(self, res, soup, **other):
+        """爬取图片地址"""
+        for el_tag in soup.select(".dw_table .el")[1:]:
+            try:
+	        url = el_tag.select_one("a")["href"]
+	        name = el_tag.select_one("a").text
+	        company = el_tag.select_one(".t2").text
+	        place = el_tag.select_one(".t3").text
+	        money = el_tag.select_one(".t4").text
+	        date = el_tag.select_one(".t5").text
+            
+                collection.insert({"url": url,"name": name, "company": company, "place": place, "money": money, "date":date})
+                print({"url": url,"name": name, "company": company, "place": place, "money": money, "date":date})
+            except Exception as e:
+                print(e)
+        print(res.url)
+     
+
+
+crawler = DongManCrawler()
+crawler.begin()

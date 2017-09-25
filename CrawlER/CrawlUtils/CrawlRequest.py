@@ -40,7 +40,7 @@ class FileSoup(object):
                     f.flush()
 
 
-def parse_html(content, parser="lxml"):
+def parse_html(content, parser="html5lib"):
     """
     解析网页
     :param content: 网页内容

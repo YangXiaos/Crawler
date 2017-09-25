@@ -132,6 +132,10 @@ class Crawler(object, metaclass=CrawlerMeta):
             json_data = res.json()
             crawl_task.func(self, res, json_data, **crawl_task.request_params)
 
+        elif crawl_task.type == CrawlerType.res:
+            res = crawl_html(self.session, crawl_task.request_url, crawl_task.timeout, headers=self.headers)
+            crawl_task.func(self, res, **crawl_task.request_params)
+
         time.sleep(crawl_task.spacing_time)
 
     def begin(self):
@@ -144,7 +148,7 @@ class Crawler(object, metaclass=CrawlerMeta):
                 crawl_task = self.task_manager.get_task()
                 self.crawl(crawl_task)
             except WithOutEnoughTask:
-                print("is over")
+                print("爬取结束")
                 break
             except Exception as e:
                 crawl_task.record_error(traceback.format_exc())
